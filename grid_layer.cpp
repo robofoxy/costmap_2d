@@ -60,7 +60,12 @@ void GridLayer::updateBounds(double robot_x, double robot_y, double robot_yaw, d
 
 
 void GridLayer::msgSub(const geometry_msgs::Polygon::ConstPtr& msg){
-	std::cout << "msg arrived! " << std::endl;
+	int size=msg->points.size();
+	for(int i=0; i<size; i++){
+		xs.push_back(msg->points[i].x);
+		ys.push_back(msg->points[i].y);
+		std::cout << xs[i] << std::endl;
+	}
 };
 
 void GridLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i,
