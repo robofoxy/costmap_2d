@@ -88,7 +88,7 @@ void GridLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int m
 	worldToMap(maxx, maxy, mapMaxx, mapMaxy);
 	for (int j = mapMiny; j < mapMaxy; j++){
 		for (int i = mapMinx; i < mapMaxx; i++){
-			int control=0;
+			int control=0, concavity=0;
 			for(int k=0; k<numberOfDots; k++){
 				unsigned int lx, ly, ox, oy, rx, ry;
 				worldToMap(xs[k], ys[k], ox, oy);
@@ -97,16 +97,18 @@ void GridLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int m
 				if(k==numberOfDots-1) worldToMap(xs[0], ys[0], rx, ry);
 				else worldToMap(xs[k+1], ys[k+1], rx, ry);
 				int LvX = (int)lx-(int)ox, LvY = (int)ly-(int)oy, RvX = (int)rx-(int)ox, RvY = (int)ry-(int)oy;
-				if(RvX*LvY-RvY*LvX >=0){
-					int actX = (int) i - (int) ox, actY = (int) j - (int) oy;
+				int actX = (int) i - (int) ox, actY = (int) j - (int) oy;
+				if(RvX*LvY-RvY*LvX >=0){					
 					if(RvX*actY - RvY*actX >=0 && LvX*actY - LvY*actX <=0) control++;
 					else continue;
 				}
 				else{
-					std::cout << "CONCAVITY HERE! " << std::endl;
+					concavity++;
+					if(RvX*actY - RvY*actX >=0 || LvX*actY - LvY*actX <=0) control++;
+					else continue;
 				}
 			}
-			if(control==numberOfDots){	
+			if(control>=numberOfDots - concavity){	
 				int index = getIndex(i, j);
 				if (master_grid.getCost(i, j) >= 100)
 							continue;
