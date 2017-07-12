@@ -61,6 +61,8 @@ void GridLayer::updateBounds(double robot_x, double robot_y, double robot_yaw, d
 
 void GridLayer::msgSub(const geometry_msgs::Polygon::ConstPtr& msg){
 	int size=msg->points.size();
+	xs.clear();
+	ys.clear();
 	for(int i=0; i<size; i++){
 		xs.push_back(msg->points[i].x);
 		ys.push_back(msg->points[i].y);
@@ -73,6 +75,15 @@ void GridLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int m
 {
   if (!enabled_)
     return;
+	int numberOfDots=xs.size();
+	unsigned int minx=99999, miny=99999, maxx=0, maxy=0;
+	for(int k=0; k<numberOfDots; k++){
+		if(xs[k]>maxx) maxx=xs[k];
+		if(xs[k]<minx) minx=xs[k];
+		if(ys[k]>maxy) maxy=ys[k];
+		if(ys[k]<miny) miny=ys[k];
+	}
+	std::cout << "min X = " << minx << " max X = " << maxx << "min Y = " << miny << " max Y = " << maxy << std::endl;
 
   for (int j = min_j; j < max_j; j++)
   {
