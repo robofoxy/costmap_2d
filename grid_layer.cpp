@@ -66,7 +66,6 @@ void GridLayer::msgSub(const geometry_msgs::Polygon::ConstPtr& msg){
 	for(int i=0; i<size; i++){
 		xs.push_back(msg->points[i].x);
 		ys.push_back(msg->points[i].y);
-		std::cout << xs[i] << std::endl;
 	}
 };
 
@@ -77,24 +76,39 @@ void GridLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int m
     return;
 	int numberOfDots=xs.size();
 	unsigned int minx=99999, miny=99999, maxx=0, maxy=0;
+	unsigned int mapMinx, mapMiny, mapMaxx, mapMaxy;
 	for(int k=0; k<numberOfDots; k++){
+		unsigned int mx, my;
 		if(xs[k]>maxx) maxx=xs[k];
 		if(xs[k]<minx) minx=xs[k];
 		if(ys[k]>maxy) maxy=ys[k];
 		if(ys[k]<miny) miny=ys[k];
 	}
-	std::cout << "min X = " << minx << " max X = " << maxx << "min Y = " << miny << " max Y = " << maxy << std::endl;
-
-  for (int j = min_j; j < max_j; j++)
-  {
-    for (int i = min_i; i < max_i; i++)
-    {
-      int index = getIndex(i, j);
-      if (costmap_[index] == NO_INFORMATION)
-        continue;
-      master_grid.setCost(i, j, costmap_[index]); 
-    }
-  }
+	worldToMap(minx, miny, mapMinx, mapMiny);
+	worldToMap(maxx, maxy, mapMaxx, mapMaxy);
+	for (int j = mapMiny; j < mapMaxy; j++){
+		for (int i = mapMinx; i < mapMaxx; i++){
+			for(int k=0; k<numberOfDots; k++){
+				unsigned int lx, ly, ox, oy, rx, ry;
+				worldToMap(xs[k], ys[k], ox, oy);
+				if(k==0) worldToMap(xs[numberOfDots-1], ys[numberOfDots-1], lx, ly);
+				else worldToMap(xs[k-1], ys[k-1], lx, ly);
+				if(k==numberOfDots-1) worldToMap(xs[0], ys[0], rx, ry);
+				else worldToMap(xs[k+1], ys[k+1], rx, ry);
+				int LvX = (int)lx-(int)ox, LvY = (int)ly-(int)oy, RvX = (int)rx-(int)ox, RvY = (int)ry-(int)oy;
+				if(RvX*LvY-RvY*LvX >=0){
+					std::cout << "CONVEXITY HERE! " << std::endl;
+				}
+				else{
+					std::cout << "CONCAVITY HERE! " << std::endl;
+				}
+			}			
+			int index = getIndex(i, j);
+			if (master_grid.getCost(i, j) >= 100)
+						continue;
+			master_grid.setCost(i, j, LETHAL_OBSTACLE); 
+		}
+	}
 }
 
 } // end namespace
