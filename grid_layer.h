@@ -5,6 +5,7 @@
 #include <costmap_2d/layered_costmap.h>
 #include <costmap_2d/GenericPluginConfig.h>
 #include <dynamic_reconfigure/server.h>
+#include "geometry_msgs/Polygon.h"
 
 namespace simple_layer_namespace
 {
@@ -22,7 +23,13 @@ public:
   {
     return true;
   }
+  
+  ros::NodeHandle n;
+  ros::Subscriber sub = n.subscribe("polygonPublisher", 1000, &GridLayer::msgSub, this);
 
+  std::vector<float> xs;
+  std::vector<float> ys;
+  virtual void msgSub(const geometry_msgs::Polygon::ConstPtr& msg);
   virtual void matchSize();
 
 private:
