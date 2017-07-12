@@ -88,6 +88,7 @@ void GridLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int m
 	worldToMap(maxx, maxy, mapMaxx, mapMaxy);
 	for (int j = mapMiny; j < mapMaxy; j++){
 		for (int i = mapMinx; i < mapMaxx; i++){
+			int control=0;
 			for(int k=0; k<numberOfDots; k++){
 				unsigned int lx, ly, ox, oy, rx, ry;
 				worldToMap(xs[k], ys[k], ox, oy);
@@ -97,16 +98,20 @@ void GridLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int m
 				else worldToMap(xs[k+1], ys[k+1], rx, ry);
 				int LvX = (int)lx-(int)ox, LvY = (int)ly-(int)oy, RvX = (int)rx-(int)ox, RvY = (int)ry-(int)oy;
 				if(RvX*LvY-RvY*LvX >=0){
-					std::cout << "CONVEXITY HERE! " << std::endl;
+					int actX = (int) i - (int) ox, actY = (int) j - (int) oy;
+					if(RvX*actY - RvY*actX >=0 && LvX*actY - LvY*actX <=0) control++;
+					else continue;
 				}
 				else{
 					std::cout << "CONCAVITY HERE! " << std::endl;
 				}
-			}			
-			int index = getIndex(i, j);
-			if (master_grid.getCost(i, j) >= 100)
-						continue;
-			master_grid.setCost(i, j, LETHAL_OBSTACLE); 
+			}
+			if(control==numberOfDots){	
+				int index = getIndex(i, j);
+				if (master_grid.getCost(i, j) >= 100)
+							continue;
+				master_grid.setCost(i, j, LETHAL_OBSTACLE);
+			}
 		}
 	}
 }
