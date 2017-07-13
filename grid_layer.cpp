@@ -88,8 +88,28 @@ void GridLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int m
 		if(ys[k]>maxy) maxy=ys[k];
 		if(ys[k]<miny) miny=ys[k];
 	}
+	
+	if(numberOfDots <3) return;
+	
 	worldToMap(minx, miny, mapMinx, mapMiny);
 	worldToMap(maxx, maxy, mapMaxx, mapMaxy);
+	
+	int cw=0;
+	unsigned int fx, fy, sx, sy, tx, ty;
+	int fvx, fvy, svx, svy;
+	
+	worldToMap(xs[0], ys[0], fx, fy);
+	worldToMap(xs[1], ys[1], sx, sy);
+	worldToMap(xs[2], ys[2], tx, ty);
+	
+	fvx=(int) sx - (int) fx;
+	fvy=(int) sy - (int) fy;
+	svx=(int) tx - (int) sx;
+	svy=(int) ty - (int) sy;
+	
+	if(fx*sy-fy*sx>=0) cw=0;
+	else cw=1;
+
 	for (int j = min_j; j < max_j; j++){
 		for (int i = min_i; i < max_i; i++){
 			int control=0, concavity=0;
@@ -102,14 +122,28 @@ void GridLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int m
 				else worldToMap(xs[k+1], ys[k+1], rx, ry);
 				int LvX = (int)lx-(int)ox, LvY = (int)ly-(int)oy, RvX = (int)rx-(int)ox, RvY = (int)ry-(int)oy;
 				int actX = (int) i - (int) ox, actY = (int) j - (int) oy;
-				if(RvX*LvY-RvY*LvX >=0){					
-					if(RvX*actY - RvY*actX >=0 && LvX*actY - LvY*actX <=0) control++;
-					else continue;
+				if(cw){
+					if(RvX*LvY-RvY*LvX <=0){					
+						if(RvX*actY - RvY*actX <=0 && LvX*actY - LvY*actX >=0) control++;
+						else continue;
+					}
+					else{
+						concavity++;
+						if(RvX*actY - RvY*actX <=0 || LvX*actY - LvY*actX >=0) control++;
+						else continue;
+					}
+				
 				}
 				else{
-					concavity++;
-					if(RvX*actY - RvY*actX >=0 || LvX*actY - LvY*actX <=0) control++;
-					else continue;
+					if(RvX*LvY-RvY*LvX >=0){					
+						if(RvX*actY - RvY*actX >=0 && LvX*actY - LvY*actX <=0) control++;
+						else continue;
+					}
+					else{
+						concavity++;
+						if(RvX*actY - RvY*actX >=0 || LvX*actY - LvY*actX <=0) control++;
+						else continue;
+					}
 				}
 			}
 			if(control>=numberOfDots - concavity && i<mapMaxx && i>mapMinx && j>mapMiny && j<mapMaxy){	
