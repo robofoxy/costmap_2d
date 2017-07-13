@@ -14,6 +14,7 @@ GridLayer::GridLayer() {}
 void GridLayer::onInitialize()
 {
   ros::NodeHandle nh("~/" + name_);
+  rolling_window_ = layered_costmap_->isRolling();
   current_ = true;
   default_value_ = NO_INFORMATION;
   matchSize();
@@ -41,6 +42,8 @@ void GridLayer::reconfigureCB(costmap_2d::GenericPluginConfig &config, uint32_t 
 void GridLayer::updateBounds(double robot_x, double robot_y, double robot_yaw, double* min_x,
                                            double* min_y, double* max_x, double* max_y)
 {
+if (rolling_window_)
+    updateOrigin(robot_x - (getSizeInMetersX() -4) / 2.0 , robot_y - (getSizeInMetersY()-4) / 2.0 );
   if (!enabled_)
     return;
 
@@ -72,8 +75,9 @@ void GridLayer::msgSub(const geometry_msgs::Polygon::ConstPtr& msg){
 void GridLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i,
                                           int max_j)
 {
-  if (!enabled_)
+  if (!enabled_){
     return;
+  }
 	int numberOfDots=xs.size();
 	unsigned int minx=99999, miny=99999, maxx=0, maxy=0;
 	unsigned int mapMinx, mapMiny, mapMaxx, mapMaxy;
@@ -86,8 +90,8 @@ void GridLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int m
 	}
 	worldToMap(minx, miny, mapMinx, mapMiny);
 	worldToMap(maxx, maxy, mapMaxx, mapMaxy);
-	for (int j = mapMiny; j < mapMaxy; j++){
-		for (int i = mapMinx; i < mapMaxx; i++){
+	for (int j = min_j; j < max_j; j++){
+		for (int i = min_i; i < max_i; i++){
 			int control=0, concavity=0;
 			for(int k=0; k<numberOfDots; k++){
 				unsigned int lx, ly, ox, oy, rx, ry;
@@ -108,11 +112,12 @@ void GridLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int m
 					else continue;
 				}
 			}
-			if(control>=numberOfDots - concavity){	
+			if(control>=numberOfDots - concavity && i<mapMaxx && i>mapMinx && j>mapMiny && j<mapMaxy){	
 				int index = getIndex(i, j);
 				if (master_grid.getCost(i, j) >= 100)
 							continue;
 				master_grid.setCost(i, j, LETHAL_OBSTACLE);
+				//std::cout << "LETHAL OBSTACLE : " << i/20 << " " << j/20 << std::endl;
 			}
 		}
 	}

@@ -14,7 +14,7 @@ class GridLayer : public costmap_2d::Layer, public costmap_2d::Costmap2D
 {
 public:
   GridLayer();
-
+  bool rolling_window_;
   virtual void onInitialize();
   virtual void updateBounds(double robot_x, double robot_y, double robot_yaw, double* min_x, double* min_y, double* max_x,
                              double* max_y);
