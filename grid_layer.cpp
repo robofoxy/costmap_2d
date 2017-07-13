@@ -117,7 +117,6 @@ void GridLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int m
 				if (master_grid.getCost(i, j) >= 100)
 							continue;
 				master_grid.setCost(i, j, LETHAL_OBSTACLE);
-				//std::cout << "LETHAL OBSTACLE : " << i/20 << " " << j/20 << std::endl;
 			}
 		}
 	}
